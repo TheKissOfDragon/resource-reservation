@@ -3,22 +3,29 @@
 - Feature Name: resource reservation
 - Start Date: 2023-01-11
 
-
 # Summary
-[summary]: #summary
 
-Resource reservation
+## Resource reservation
+
+### install postgresql:
+
+- install postgresql: `brew install postgresql`
+- install pgcli CLI for postgresql : `brew install pgcli`
+- start postgresql: `brew services start postgresql`
+- create database : `createdb reservation`
 
 # Motivation
-[motivation]: #motivation
 
 we need a build a common solution for all kinds of resources reservaction.
 
 # Guide-level explanation
+
 Basic technical design
 
 ### Service interface
+
 we need to define a interface based on gRC.Here is the proto blew:
+
 ```proto
 enum ReservationStatus {
       UNKNOW = 0;
@@ -40,6 +47,32 @@ service  ReservationService {
 }
 ```
 
+### Database schema
+
+we use postgres as the database.Here is the schema:
+
+```sql
+ create SCHEMA rsvp;
+
+ CREATE TABLE rsvp.reservations (
+      id uuid NOT NULL DEFAULT uuid_generate_v(),
+      user_id varchar(64) NOT NUll,
+      status rsvp.reservation_status NOT NULL,
+      DEFAULT 'pending',
+
+      resource_id varchar(64) NOT NULL,
+      timespan tstzrang NOT NULL,
+      not text,
+
+      CONSTRAINT reservations_pKey PRIMARY KEY(id),
+      CONSTRAINT reservations_conflict EXCLUDE
+      USING gist(resource_id WITH =, timespan WITH &&)
+
+ );
+ CREATE INDEX reservations_resoucre_id_idx on rsvp.reservations(reservations_id);
+ CREATE INDEX reservations_user_id_idx on rsvp.reservations(user_id);
+
+```
 
 Explain the proposal as if it was already included in the language and you were teaching it to another Rust programmer. That generally means:
 
@@ -53,7 +86,6 @@ Explain the proposal as if it was already included in the language and you were 
 For implementation-oriented RFCs (e.g. for compiler internals), this section should focus on how compiler contributors should think about the change, and give examples of its concrete impact. For policy RFCs, this section should provide an example-driven introduction to the policy, and explain its impact in concrete terms.
 
 # Reference-level explanation
-[reference-level-explanation]: #reference-level-explanation
 
 This is the technical portion of the RFC. Explain the design in sufficient detail that:
 
@@ -64,12 +96,10 @@ This is the technical portion of the RFC. Explain the design in sufficient detai
 The section should return to the examples given in the previous section, and explain more fully how the detailed proposal makes those examples work.
 
 # Drawbacks
-[drawbacks]: #drawbacks
 
 Why should we *not* do this?
 
 # Rationale and alternatives
-[rationale-and-alternatives]: #rationale-and-alternatives
 
 - Why is this design the best in the space of possible designs?
 - What other designs have been considered and what is the rationale for not choosing them?
@@ -77,7 +107,6 @@ Why should we *not* do this?
 - If this is a language proposal, could this be done in a library or macro instead? Does the proposed change make Rust code easier or harder to read, understand, and maintain?
 
 # Prior art
-[prior-art]: #prior-art
 
 Discuss prior art, both the good and the bad, in relation to this proposal.
 A few examples of what this can include are:
@@ -94,14 +123,12 @@ Note that while precedent set by other languages is some motivation, it does not
 Please also take into consideration that rust sometimes intentionally diverges from common language features.
 
 # Unresolved questions
-[unresolved-questions]: #unresolved-questions
 
 - What parts of the design do you expect to resolve through the RFC process before this gets merged?
 - What parts of the design do you expect to resolve through the implementation of this feature before stabilization?
 - What related issues do you consider out of scope for this RFC that could be addressed in the future independently of the solution that comes out of this RFC?
 
 # Future possibilities
-[future-possibilities]: #future-possibilities
 
 Think about what the natural extension and evolution of your proposal would
 be and how it would affect the language and project as a whole in a holistic
